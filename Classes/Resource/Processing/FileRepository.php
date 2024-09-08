@@ -2,6 +2,7 @@
 
 namespace WEBcoast\DeferredImageProcessing\Resource\Processing;
 
+use Doctrine\DBAL\ParameterType;
 use TYPO3\CMS\Core\Database\ConnectionPool;
 use TYPO3\CMS\Core\Resource\Processing\TaskInterface;
 use TYPO3\CMS\Core\Utility\GeneralUtility;
@@ -32,9 +33,9 @@ class FileRepository
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable(self::TABLE);
         $queryBuilder->insert(self::TABLE)
             ->values([
-                'storage' => $queryBuilder->createNamedParameter($task->getSourceFile()->getStorage()->getUid() ,\PDO::PARAM_INT),
+                'storage' => $queryBuilder->createNamedParameter($task->getSourceFile()->getStorage()->getUid() ,ParameterType::INTEGER),
                 'public_url' => $queryBuilder->createNamedParameter(PathUtility::stripLeadingSlash($task->getTargetFile()->getPublicUrl())),
-                'source_file' => $queryBuilder->createNamedParameter($task->getSourceFile()->getUid(), \PDO::PARAM_INT),
+                'source_file' => $queryBuilder->createNamedParameter($task->getSourceFile()->getUid(), ParameterType::INTEGER),
                 'task_type' => $queryBuilder->createNamedParameter($task->getType()),
                 'task_name' => $queryBuilder->createNamedParameter($task->getName()),
                 'configuration' => $queryBuilder->createNamedParameter(serialize($task->getConfiguration())),
@@ -83,7 +84,7 @@ class FileRepository
     {
         $queryBuilder = GeneralUtility::makeInstance(ConnectionPool::class)->getQueryBuilderForTable(self::TABLE);
         $queryBuilder->delete(self::TABLE)
-            ->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, \PDO::PARAM_INT)));
+            ->where($queryBuilder->expr()->eq('uid', $queryBuilder->createNamedParameter($uid, ParameterType::INTEGER)));
 
         return $queryBuilder->executeStatement();
     }
