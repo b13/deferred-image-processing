@@ -5,6 +5,7 @@ namespace WEBcoast\DeferredImageProcessing\Resource\Processing;
 use TYPO3\CMS\Core\Context\Context;
 use TYPO3\CMS\Core\Context\Exception\AspectNotFoundException;
 use TYPO3\CMS\Core\Http\ApplicationType;
+use TYPO3\CMS\Core\Imaging\Exception\ZeroImageDimensionException;
 use TYPO3\CMS\Core\Imaging\ImageDimension;
 use TYPO3\CMS\Core\Imaging\ImageManipulation\Area;
 use TYPO3\CMS\Core\Resource\Processing\LocalImageProcessor;
@@ -53,7 +54,14 @@ class DeferredImageProcessor extends LocalImageProcessor
                 $task = GeneralUtility::makeInstance(TaskTypeRegistry::class)->getTaskForType($task->getType() . '.' . $task->getName(), $task->getTargetFile(), $configuration);
             }
 
-            $imageDimensions = ImageDimension::fromProcessingTask($task);
+            try {
+                $imageDimensions = ImageDimension::fromProcessingTask($task);
+            } catch (ZeroImageDimensionException $e) {
+                // do it like TYPO3 Core DeferredBackendImageProcessor
+                // To not fail image processing, we just assume an image dimension here
+                $imageDimensions = new ImageDimension(64, 64);
+            }
+
             if ($imageDimensions->getWidth() === $task->getTargetFile()->getOriginalFile()->getProperty('width') && $imageDimensions->getHeight() === $task->getTargetFile()->getOriginalFile()->getProperty('height') && !$task->getConfiguration()['crop']) {
                 // If the target image dimensions are identical to the original file and no cropping is defined, do not process, but use the original file
                 $task->setExecuted(true);
